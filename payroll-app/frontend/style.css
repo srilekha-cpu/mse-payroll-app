@@ -1,0 +1,96 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f6f9;
+  color: #1a1a1a;
+}
+.muted { color: #6b7280; }
+.small { font-size: 12px; }
+
+/* ---------- Login ---------- */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1F4E78, #2c6ca3);
+}
+.login-card {
+  background: #fff;
+  padding: 36px 40px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  width: 320px;
+}
+.login-card h1 { font-size: 20px; margin: 0 0 4px; color: #1F4E78; }
+.login-card label { display: block; margin-top: 14px; font-size: 13px; font-weight: bold; }
+.login-card input {
+  width: 100%; padding: 9px 10px; margin-top: 4px;
+  border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;
+}
+.btn-primary {
+  margin-top: 20px; width: 100%; padding: 10px; background: #1F4E78; color: #fff;
+  border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;
+}
+.btn-primary:hover { background: #163a5c; }
+.error-box {
+  background: #fee2e2; color: #991b1b; padding: 8px 10px; border-radius: 6px;
+  font-size: 13px; margin-bottom: 8px;
+}
+
+/* ---------- App shell ---------- */
+.app-shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 220px; background: #1F4E78; color: #fff; display: flex; flex-direction: column;
+  padding: 20px 0; flex-shrink: 0;
+}
+.brand { padding: 0 20px 20px; font-weight: bold; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+.brand .muted { color: #cbd8e6; }
+#nav-links { flex: 1; padding-top: 10px; }
+.nav-item {
+  display: block; padding: 11px 20px; color: #dbe6f0; text-decoration: none; cursor: pointer;
+  font-size: 14px; border-left: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(255,255,255,0.08); }
+.nav-item.active { background: rgba(255,255,255,0.14); border-left-color: #fff; color: #fff; font-weight: bold; }
+.sidebar-footer { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.15); }
+.user-badge { font-size: 13px; margin-bottom: 6px; }
+.btn-link { background: none; border: none; color: #cbd8e6; cursor: pointer; font-size: 13px; padding: 0; }
+.btn-link:hover { color: #fff; text-decoration: underline; }
+
+.content { flex: 1; padding: 28px 36px; overflow-x: auto; }
+.banner { padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
+.banner.success { background: #d1fae5; color: #065f46; }
+.banner.error { background: #fee2e2; color: #991b1b; }
+
+h2.page-title { color: #1F4E78; margin-top: 0; }
+
+.toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar select, .toolbar input { padding: 7px 9px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.btn-sm {
+  padding: 7px 14px; background: #1F4E78; color: #fff; border: none; border-radius: 6px;
+  font-size: 13px; cursor: pointer;
+}
+.btn-sm:hover { background: #163a5c; }
+.btn-sm.secondary { background: #fff; color: #1F4E78; border: 1px solid #1F4E78; }
+
+table { border-collapse: collapse; width: 100%; background: #fff; border-radius: 8px; overflow: hidden; }
+th, td { padding: 9px 12px; font-size: 13px; text-align: left; border-bottom: 1px solid #eef0f3; white-space: nowrap; }
+th { background: #1F4E78; color: #fff; position: sticky; top: 0; }
+tr:hover td { background: #f8fafc; }
+
+.card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+.form-grid label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 4px; }
+.form-grid input, .form-grid select { width: 100%; padding: 7px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+
+.flag-spike-up { background: #c6efce !important; }
+.flag-spike-down { background: #ffc7ce !important; }
+.flag-leave { background: #fff2cc !important; }
+
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+.tag-owner { background: #d9e1f2; color: #1F4E78; }
+.tag-accountant { background: #fff2cc; color: #7a5b00; }
+
+.table-wrap { max-height: 70vh; overflow: auto; border-radius: 8px; }

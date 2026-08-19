@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MSE Tech — Payroll System</title>
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view" class="login-wrap">
+    <div class="login-card">
+      <h1>MSE Tech Payroll</h1>
+      <p class="muted">Sign in to continue</p>
+      <div id="login-error" class="error-box" style="display:none;"></div>
+      <label>Username</label>
+      <input id="login-username" type="text" autocomplete="username" />
+      <label>Password</label>
+      <input id="login-password" type="password" autocomplete="current-password" />
+      <button id="login-btn" class="btn-primary">Sign In</button>
+      <p class="muted small">Default logins: owner/owner123, accountant/acc123 — change these after first login.</p>
+    </div>
+  </div>
+
+  <!-- APP SHELL -->
+  <div id="app-view" class="app-shell" style="display:none;">
+    <aside class="sidebar">
+      <div class="brand">MSE Tech<br /><span class="muted small">Payroll System</span></div>
+      <nav id="nav-links"></nav>
+      <div class="sidebar-footer">
+        <div id="user-badge" class="user-badge"></div>
+        <button id="logout-btn" class="btn-link">Log out</button>
+      </div>
+    </aside>
+    <main class="content">
+      <div id="banner" class="banner" style="display:none;"></div>
+      <div id="view-root"></div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
