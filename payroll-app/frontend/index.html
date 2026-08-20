@@ -3,16 +3,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MSE Tech — Payroll System</title>
+<title>MSE Technicians Payroll System</title>
+<link rel="icon" type="image/png" href="assets/favicon.png" />
 <link rel="stylesheet" href="style.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
 <body>
 
   <!-- LOGIN VIEW -->
   <div id="login-view" class="login-wrap">
     <div class="login-card">
-      <h1>MSE Tech Payroll</h1>
+      <img src="assets/logo.png" alt="Masterscan Engineering" class="login-logo" />
+      <h1>MSE Technicians<br />Payroll System</h1>
       <p class="muted">Sign in to continue</p>
       <div id="login-error" class="error-box" style="display:none;"></div>
       <label>Username</label>
@@ -20,14 +23,17 @@
       <label>Password</label>
       <input id="login-password" type="password" autocomplete="current-password" />
       <button id="login-btn" class="btn-primary">Sign In</button>
-      <p class="muted small">Default logins: owner/owner123, accountant/acc123 — change these after first login.</p>
+      <p class="muted small">Default logins: owner/owner123 (Super Admin), accountant/acc123 — change these after first login.</p>
     </div>
   </div>
 
   <!-- APP SHELL -->
   <div id="app-view" class="app-shell" style="display:none;">
     <aside class="sidebar">
-      <div class="brand">MSE Tech<br /><span class="muted small">Payroll System</span></div>
+      <div class="brand">
+        <img src="assets/logo.png" alt="Masterscan Engineering" class="sidebar-logo" />
+        <div>MSE Technicians<br /><span class="muted small">Payroll System</span></div>
+      </div>
       <nav id="nav-links"></nav>
       <div class="sidebar-footer">
         <div id="user-badge" class="user-badge"></div>
