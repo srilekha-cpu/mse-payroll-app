@@ -4,7 +4,7 @@
 // 1. Deploy backend/Code.gs as a Google Apps Script Web App (see its header
 //    comment for steps).
 // 2. Paste the Web App URL below.
-const API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+const API_URL = 'https://script.google.com/macros/s/AKfycbx-vL5E9e6Au080UII13SyZAbWYcMd1QiseWuw5cNwI28FDiiT6H001m56dNvSO8T884w/exec';
 
 // -----------------------------------------------------------------------------
 // STATE
