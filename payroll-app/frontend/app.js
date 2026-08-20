@@ -4,7 +4,7 @@
 // 1. Deploy backend/Code.gs as a Google Apps Script Web App (see its header
 //    comment for steps).
 // 2. Paste the Web App URL below.
-const API_URL = 'https://script.google.com/macros/s/AKfycbx-vL5E9e6Au080UII13SyZAbWYcMd1QiseWuw5cNwI28FDiiT6H001m56dNvSO8T884w/exec';
+const API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
 // -----------------------------------------------------------------------------
 // STATE
@@ -107,16 +107,16 @@ function empName(empId) {
 // NAV / ROUTING
 // -----------------------------------------------------------------------------
 const NAV_ITEMS = [
-  { id: 'payroll', label: 'Payroll Entry', roles: ['Owner', 'Accountant'] },
-  { id: 'overview', label: 'Monthly Overview & Spikes', roles: ['Owner', 'Accountant'] },
-  { id: 'ottracker', label: 'OT & Basic Tracker', roles: ['Owner', 'Accountant'] },
-  { id: 'deptsummary', label: 'Department Summary', roles: ['Owner', 'Accountant'] },
-  { id: 'exitlog', label: 'Exit / Final Settlement', roles: ['Owner', 'Accountant'] },
-  { id: 'balances', label: 'Advance Balances', roles: ['Owner', 'Accountant'] },
-  { id: 'ledger', label: 'Advance Ledger (Owner Only)', roles: ['Owner'] },
-  { id: 'employees', label: 'Employee Master', roles: ['Owner'] },
-  { id: 'admin', label: 'Admin / Recalculate', roles: ['Owner'] },
-  { id: 'account', label: 'Change Password', roles: ['Owner', 'Accountant'] },
+  { id: 'payroll', label: 'Payroll Entry', roles: ['SuperAdmin', 'Accountant'] },
+  { id: 'overview', label: 'Monthly Overview & Spikes', roles: ['SuperAdmin', 'Accountant'] },
+  { id: 'ottracker', label: 'OT & Basic Tracker', roles: ['SuperAdmin', 'Accountant'] },
+  { id: 'deptsummary', label: 'Department Summary', roles: ['SuperAdmin', 'Accountant'] },
+  { id: 'exitlog', label: 'Exit / Final Settlement', roles: ['SuperAdmin', 'Accountant'] },
+  { id: 'balances', label: 'Advance Balances', roles: ['SuperAdmin', 'Accountant'] },
+  { id: 'ledger', label: 'Advance Ledger (Super Admin Only)', roles: ['SuperAdmin'] },
+  { id: 'employees', label: 'Employee Master (Super Admin Only)', roles: ['SuperAdmin'] },
+  { id: 'admin', label: 'Admin / Recalculate', roles: ['SuperAdmin'] },
+  { id: 'account', label: 'Change Password', roles: ['SuperAdmin', 'Accountant'] },
 ];
 
 function defaultViewForRole(role) {
@@ -598,11 +598,15 @@ async function renderOTTrackerView() {
 // =============================================================================
 // VIEW: DEPARTMENT SUMMARY
 // =============================================================================
+let deptCharts = []; // track Chart.js instances so we can destroy them on re-render
+
 async function renderDeptSummaryView() {
   const data = await api('getDeptSummary');
   const root = document.getElementById('view-root');
   if (!data.length) { root.innerHTML = '<h2 class="page-title">Department Summary</h2><p>No employees yet.</p>'; return; }
   const months = Object.keys(data[0].byMonth);
+  const latestMonth = months[months.length - 1];
+
   let head = '<tr><th>Department</th>';
   months.forEach(function (m) { head += '<th>Headcount (' + m + ')</th><th>Gross (' + m + ')</th><th>Net (' + m + ')</th><th>Advance Recovered (' + m + ')</th>'; });
   head += '</tr>';
@@ -614,10 +618,69 @@ async function renderDeptSummaryView() {
     });
     return row + '</tr>';
   }).join('');
+
   root.innerHTML =
     '<h2 class="page-title">Department Summary</h2>' +
     '<p class="muted">Set each employee\'s Department on the Employee Master tab to populate this.</p>' +
+    '<div class="card" style="display:flex; gap:24px; flex-wrap:wrap;">' +
+    '  <div style="flex:1; min-width:320px;"><h3>Net Pay by Department — ' + latestMonth + '</h3><canvas id="dept-bar-chart" height="240"></canvas></div>' +
+    '  <div style="flex:1; min-width:320px;"><h3>Headcount by Department — ' + latestMonth + '</h3><canvas id="dept-headcount-chart" height="240"></canvas></div>' +
+    '</div>' +
+    '<div class="card"><h3>Net Pay Trend by Department</h3><canvas id="dept-trend-chart" height="100"></canvas></div>' +
     '<div class="table-wrap"><table><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>';
+
+  deptCharts.forEach(function (c) { c.destroy(); });
+  deptCharts = [];
+
+  const labels = data.map(function (d) { return d.department; });
+  const palette = ['#1F4E78', '#c0392b', '#27ae60', '#e67e22', '#8e44ad', '#16a085', '#2980b9', '#d35400', '#7f8c8d', '#c2185b', '#00796b'];
+
+  // Bar: Net Pay by department, latest month
+  deptCharts.push(new Chart(document.getElementById('dept-bar-chart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Total Net Pay (' + latestMonth + ')',
+        data: data.map(function (d) { return d.byMonth[latestMonth].totalNet; }),
+        backgroundColor: '#1F4E78',
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  }));
+
+  // Bar: Headcount by department, latest month
+  deptCharts.push(new Chart(document.getElementById('dept-headcount-chart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Headcount (' + latestMonth + ')',
+        data: data.map(function (d) { return d.byMonth[latestMonth].headcount; }),
+        backgroundColor: '#c0392b',
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  }));
+
+  // Line: Net Pay trend per department across all months
+  deptCharts.push(new Chart(document.getElementById('dept-trend-chart'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: data.map(function (d, i) {
+        return {
+          label: d.department,
+          data: months.map(function (m) { return d.byMonth[m].totalNet; }),
+          borderColor: palette[i % palette.length],
+          backgroundColor: palette[i % palette.length],
+          fill: false,
+          tension: 0.2,
+        };
+      })
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  }));
 }
 
 // =============================================================================
@@ -649,11 +712,12 @@ async function renderBalancesView() {
   root.innerHTML =
     '<h2 class="page-title">Advance Balances</h2>' +
     '<p class="muted">Computed automatically: Total Given (from the Advance Ledger) minus Total Recovered (from Payroll Entry deductions).</p>' +
-    '<div class="table-wrap"><table><thead><tr><th>EmpID</th><th>Name</th><th>Total Given</th><th>Total Recovered</th><th>Outstanding</th></tr></thead><tbody>' +
+    '<div class="table-wrap"><table><thead><tr><th>EmpID</th><th>Name</th><th>Total Given</th><th>Total Recovered</th><th>Outstanding</th><th>Deducted Months History</th></tr></thead><tbody>' +
     data.filter(function (r) { return r.TotalGiven > 0 || r.Outstanding !== 0; }).map(function (r) {
       return '<tr><td>' + escapeHtml(r.EmpID) + '</td><td>' + escapeHtml(r.Name) + '</td>' +
         '<td>' + fmtMoney(r.TotalGiven) + '</td><td>' + fmtMoney(r.TotalRecovered) + '</td>' +
-        '<td><b>' + fmtMoney(r.Outstanding) + '</b></td></tr>';
+        '<td><b>' + fmtMoney(r.Outstanding) + '</b></td>' +
+        '<td>' + escapeHtml(r.DeductedMonthsHistory) + '</td></tr>';
     }).join('') +
     '</tbody></table></div>';
 }
@@ -664,7 +728,7 @@ async function renderBalancesView() {
 async function renderLedgerView() {
   const root = document.getElementById('view-root');
   root.innerHTML =
-    '<h2 class="page-title">Advance Ledger — Owner Only</h2>' +
+    '<h2 class="page-title">Advance Ledger — Super Admin Only</h2>' +
     '<p class="muted">Every time you give an employee an advance, record it here. It will start auto-deducting from their next payroll entry.</p>' +
     '<div class="card">' +
     '  <div class="form-grid">' +
@@ -725,7 +789,10 @@ async function renderEmployeesView() {
   const root = document.getElementById('view-root');
   root.innerHTML =
     '<h2 class="page-title">Employee Master</h2>' +
-    '<p class="muted">Add new joiners here first. Edit a row\'s fields then click Save on that row.</p>' +
+    '<p class="muted">Add new joiners here first. Edit a row\'s fields then click Save on that row. ' +
+    '<b>Only the Super Admin account can access this screen</b> — Basic Rate and Fixed Allowance are an ' +
+    'employee\'s salary, so any increment can only ever be keyed in here, by Super Admin. The Accountant has ' +
+    'no path to change these figures anywhere in the app.</p>' +
     '<div class="table-wrap"><table><thead><tr><th>EmpID</th><th>Name</th><th>Department</th><th>Status</th>' +
     '<th>Basic Rate</th><th>Fixed Allow</th><th>Film Rate</th><th>OT Rate</th><th>Std Instalment</th><th>Notes</th><th></th></tr></thead>' +
     '<tbody id="emp-tbody"></tbody></table></div>' +
@@ -747,7 +814,8 @@ async function renderEmployeesView() {
       '<td><input class="e-dept" value="' + escapeHtml(e.Department || '') + '" style="width:110px" /></td>' +
       '<td><select class="e-status"><option ' + (e.Status === 'Active' ? 'selected' : '') + '>Active</option>' +
         '<option ' + (e.Status === 'Exited' ? 'selected' : '') + '>Exited</option>' +
-        '<option ' + (e.Status === 'On Leave' ? 'selected' : '') + '>On Leave</option></select></td>' +
+        '<option ' + (e.Status === 'On Leave' ? 'selected' : '') + '>On Leave</option>' +
+        '<option ' + (e.Status === 'Overseas Deployed' ? 'selected' : '') + '>Overseas Deployed</option></select></td>' +
       '<td><input class="e-basic" type="number" value="' + (e.BasicRate || 0) + '" style="width:80px" /></td>' +
       '<td><input class="e-allow" type="number" value="' + (e.FixedAllowRate || 0) + '" style="width:80px" /></td>' +
       '<td><input class="e-film" type="number" value="' + (e.FilmRate || 0) + '" style="width:70px" /></td>' +
@@ -828,7 +896,28 @@ async function renderAdminView() {
     're-cascade advance recovery correctly through every later month, in chronological order.</p>' +
     '<button class="btn-sm" id="recalc-btn">Recalculate Everything</button>' +
     '<p id="recalc-result" class="muted small" style="margin-top:10px;"></p>' +
+    '</div>' +
+    '<div class="card">' +
+    '<h3>Sync Departments from Latest Data</h3>' +
+    '<p class="muted">Fills in the Department column for any employee whose Department is currently blank, ' +
+    'using the department list that was loaded into this system. It never overwrites a Department you\'ve ' +
+    'already set by hand — if the loaded data disagrees with something you\'ve already entered, it\'s reported ' +
+    'below instead of being changed automatically. Any names from the department list that don\'t match an ' +
+    'existing employee are added as new rows (with ₹0 rates — fill those in on Employee Master afterwards). ' +
+    'Safe to run more than once.</p>' +
+    '<button class="btn-sm" id="sync-dept-btn">Sync Departments</button>' +
+    '<div id="sync-dept-result" class="muted small" style="margin-top:10px;"></div>' +
+    '</div>' +
+    '<div class="card">' +
+    '<h3>Migrate "Owner" Role to "Super Admin"</h3>' +
+    '<p class="muted">Only needed once, if this Google Sheet was set up before the role was renamed from ' +
+    '"Owner" to "Super Admin". Updates the Users sheet so the role reads "SuperAdmin" going forward — your ' +
+    'username and password don\'t change. After running this, log out and log back in so your session picks up ' +
+    'the new role name. Safe to run more than once — does nothing if there\'s nothing left to migrate.</p>' +
+    '<button class="btn-sm secondary" id="migrate-role-btn">Run Migration</button>' +
+    '<p id="migrate-role-result" class="muted small" style="margin-top:10px;"></p>' +
     '</div>';
+
   document.getElementById('recalc-btn').onclick = async function () {
     const btn = this;
     btn.disabled = true;
@@ -838,6 +927,58 @@ async function renderAdminView() {
       showBanner('Recalculated ' + res.rowsRecalculated + ' payroll rows.', 'success');
     } catch (err) {
       showBanner(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  document.getElementById('sync-dept-btn').onclick = async function () {
+    const btn = this;
+    btn.disabled = true;
+    const resultBox = document.getElementById('sync-dept-result');
+    resultBox.textContent = 'Syncing…';
+    try {
+      const res = await api('syncDepartmentsFromSeed');
+      let html = '<p><b>Filled ' + res.filledCount + '</b> blank Department cells, ' +
+        '<b>added ' + res.addedCount + '</b> new employees found only in the department list.</p>';
+      if (res.conflictCount) {
+        html += '<p style="color:#991b1b;"><b>' + res.conflictCount + ' conflicts</b> — these already had a ' +
+          'different Department set, so nothing was changed. Review and update manually on Employee Master if needed:</p>' +
+          '<ul>' + res.conflicts.map(function (c) {
+            return '<li>' + escapeHtml(c.EmpID) + ' — ' + escapeHtml(c.Name) + ': sheet has "' + escapeHtml(c.sheetHas) +
+              '", loaded data suggests "' + escapeHtml(c.seedSuggests) + '"</li>';
+          }).join('') + '</ul>';
+      }
+      if (res.addedCount) {
+        html += '<p><b>Newly added employees</b> (set their rates on Employee Master):</p><ul>' +
+          res.added.map(function (a) { return '<li>' + escapeHtml(a.EmpID) + ' — ' + escapeHtml(a.Name) + ' (' + escapeHtml(a.Department) + ')</li>'; }).join('') +
+          '</ul>';
+      }
+      resultBox.innerHTML = html;
+      showBanner('Department sync complete.', 'success');
+      await preloadEmployees();
+    } catch (err) {
+      showBanner(err.message, 'error');
+      resultBox.textContent = '';
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  document.getElementById('migrate-role-btn').onclick = async function () {
+    const btn = this;
+    btn.disabled = true;
+    const resultBox = document.getElementById('migrate-role-result');
+    resultBox.textContent = 'Running…';
+    try {
+      const res = await api('migrateOwnerRoleToSuperAdmin');
+      resultBox.textContent = res.rowsMigrated > 0
+        ? 'Migrated ' + res.rowsMigrated + ' user row(s) to Super Admin. Please log out and log back in.'
+        : 'Nothing to migrate — already up to date.';
+      showBanner('Role migration complete.', 'success');
+    } catch (err) {
+      showBanner(err.message, 'error');
+      resultBox.textContent = '';
     } finally {
       btn.disabled = false;
     }
